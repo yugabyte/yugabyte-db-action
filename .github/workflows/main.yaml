@@ -1,0 +1,34 @@
+name: Test yugabyte-db-action
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test-yugabytedb-action:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup yugabyte-db action
+      id: server
+      uses: yugabyte/yugabyte-db-action@master
+
+    - name: Print output variables
+      run: |
+        echo "Container ID: ${{ steps.server.outputs.container_id }}"
+        echo "YB Master UI Port: ${{ steps.server.outputs.yb_master_ui_port }}"
+        echo "YB Tserver UI Port: ${{ steps.server.outputs.yb_tserver_ui_port }}"
+        echo "YSQL Port: ${{ steps.server.outputs.ysql_port }}"
+        echo "YCQL Port: ${{ steps.server.outputs.ycql_port }}"
+
+    - name: Test YSQL API
+      run: docker run --network host --rm yugabytedb/yugabyte-client:latest ysqlsh -h localhost -p "${{ steps.server.outputs.ysql_port }}" -c \\conninfo
+
+    - name: Test YCQL API
+      run: docker run --network host --rm yugabytedb/yugabyte-client:latest ycqlsh localhost "${{ steps.server.outputs.ycql_port }}" --execute 'SHOW HOST'
+
+    - name: Test YB Master UI
+      run: curl --head "http://localhost:${{ steps.server.outputs.yb_master_ui_port }}"
+
+    - name: Test YB Tserver UI
+      run: curl --head "http://localhost:${{ steps.server.outputs.yb_tserver_ui_port }}"

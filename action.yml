@@ -1,0 +1,41 @@
+name: 'Setup YugabyteDB'
+description: 'Github action to setup a YugabyteDB'
+author: 'Yugabyte'
+branding:
+  icon: 'database'
+  color: 'purple'
+inputs:
+  yb_image_tag:
+    required: false
+    description: 'Docker yugabytedb image tag. For available image tags please see https://hub.docker.com/r/yugabytedb/yugabyte'
+    default: 'latest'
+  yb_master_ui_port:
+    description: 'YB Master UI'
+    required: false
+    default: '7000'
+  yb_tserver_ui_port:
+    description: 'YB Tserver UI'
+    required: false
+    default: '9000'
+  ysql_port:
+    description: 'YSQL API Port'
+    required: false
+    default: '5433'
+  ycql_port:
+    description: 'YCQL API Port'
+    required: false
+    default: '9042'
+outputs:
+  container_id: # id of output
+    description: 'Contianer ID'
+  yb_master_ui_port:
+    description: 'YB Master UI'
+  yb_tserver_ui_port:
+    description: 'YB Tserver UI'
+  ysql_port:
+    description: 'YSQL API Port'
+  ycql_port:
+    description: 'YCQL API Port'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
