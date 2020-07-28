@@ -1,6 +1,6 @@
 name: 'Setup YugabyteDB'
 description: 'Github action to setup a YugabyteDB'
-author: 'Yugabyte'
+author: 'yugabyte'
 branding:
   icon: 'database'
   color: 'purple'
