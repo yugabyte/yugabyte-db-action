@@ -27,7 +27,7 @@ inputs:
     default: '9042'
 outputs:
   container_id: # id of output
-    description: 'Contianer ID'
+    description: 'Container ID'
   yb_master_ui_port:
     description: 'YB Master UI'
   yb_tserver_ui_port:
