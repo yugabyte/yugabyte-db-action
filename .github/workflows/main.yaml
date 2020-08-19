@@ -1,0 +1,43 @@
+name: Test yugabyte-db-action
+
+on:
+  repository_dispatch:
+    types:
+    - on-release
+  push:
+  pull_request:
+
+jobs:
+  test-yugabytedb-action:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout action
+      uses: actions/checkout@v2
+
+    - name: Setup yugabyte-db action
+      id: server
+      uses: ./
+
+    - name: Print output variables
+      run: |
+        echo "Container ID: ${{ steps.server.outputs.container_id }}"
+        echo "YB Master UI Port: ${{ steps.server.outputs.yb_master_ui_port }}"
+        echo "YB Tserver UI Port: ${{ steps.server.outputs.yb_tserver_ui_port }}"
+        echo "YSQL Port: ${{ steps.server.outputs.ysql_port }}"
+        echo "YCQL Port: ${{ steps.server.outputs.ycql_port }}"
+
+    - name: Test YSQL API
+      run: |
+        docker run --network host --rm yugabytedb/yugabyte-client:latest ysqlsh -h localhost -p "${{ steps.server.outputs.ysql_port }}" \
+          -c "CREATE TABLE foo(id int primary key); INSERT INTO foo SELECT * FROM generate_series(1,10);"
+
+    - name: Test YCQL API
+      run: |
+        docker run --network host --rm yugabytedb/yugabyte-client:latest ycqlsh localhost "${{ steps.server.outputs.ycql_port }}" \
+          --execute 'create keyspace foo; create table foo.bar(id int primary key); insert into foo.bar (id) values (1);'
+
+    - name: Test YB Master UI
+      run: curl --head "http://localhost:${{ steps.server.outputs.yb_master_ui_port }}"
+
+    - name: Test YB Tserver UI
+      run: curl --head "http://localhost:${{ steps.server.outputs.yb_tserver_ui_port }}"
