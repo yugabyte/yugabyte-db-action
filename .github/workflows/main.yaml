@@ -41,3 +41,45 @@ jobs:
 
     - name: Test YB Tserver UI
       run: curl --head "http://localhost:${{ steps.server.outputs.yb_tserver_ui_port }}"
+
+  test-env-var:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout action
+      uses: actions/checkout@v2
+
+    - name: Setup yugabyte-db action
+      id: server
+      uses: ./
+      with:
+        yb_image_tag: 2.3.2.0-b37
+        ysql_user: testsqluser
+        ysql_password: testsqlpass
+        ysql_db: testdb
+        ycql_user: testcqluser
+        ycql_password: testcqlpass
+        ycql_keyspace: testks
+
+    - name: Print output variables
+      run: |
+        echo "Container ID: ${{ steps.server.outputs.container_id }}"
+        echo "YB Master UI Port: ${{ steps.server.outputs.yb_master_ui_port }}"
+        echo "YB Tserver UI Port: ${{ steps.server.outputs.yb_tserver_ui_port }}"
+        echo "YSQL Port: ${{ steps.server.outputs.ysql_port }}"
+        echo "YCQL Port: ${{ steps.server.outputs.ycql_port }}"
+
+    - name: Test YSQL API
+      run: |
+        docker run --network host -e PGPASSWORD=testsqlpass --rm yugabytedb/yugabyte-client:latest ysqlsh -h localhost -U testsqluser -d testdb -p "${{ steps.server.outputs.ysql_port }}" \
+          -c "CREATE TABLE foo(id int primary key); INSERT INTO foo SELECT * FROM generate_series(1,10);"
+
+    - name: Test YCQL API
+      run: |
+        docker run --network host --rm yugabytedb/yugabyte-client:latest ycqlsh localhost -u testcqluser -p testcqlpass "${{ steps.server.outputs.ycql_port }}" \
+          --execute 'create keyspace foo; create table foo.bar(id int primary key); insert into foo.bar (id) values (1);'
+
+    - name: Test YB Master UI
+      run: curl --head "http://localhost:${{ steps.server.outputs.yb_master_ui_port }}"
+
+    - name: Test YB Tserver UI
+      run: curl --head "http://localhost:${{ steps.server.outputs.yb_tserver_ui_port }}"

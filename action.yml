@@ -25,6 +25,24 @@ inputs:
     description: 'YCQL API Port'
     required: false
     default: '9042'
+  ysql_user:
+    description: 'YSQL User'
+    required: false
+  ysql_password:
+    description: 'YSQL Password, Setting this will enable the authentication mode'
+    required: false
+  ysql_db:
+    description: 'YSQL DB'
+    required: false
+  ycql_user:
+    description: 'YCQL User, Setting this will enable the authentication mode'
+    required: false
+  ycql_password:
+    description: 'YCQL Password, Setting this will enable the authentication mode'
+    required: false
+  ycql_keyspace:
+    description: 'YCQL Keyspace'
+    required: false
 outputs:
   container_id: # id of output
     description: 'Container ID'
