@@ -15,13 +15,13 @@ Github action to setup a YugabyteDB database
 
 ### `yb_master_ui_port`
 
-* YB Master UI
+* YB Master UI Port
 * Default value: `7000`
 * Optional
 
 ### `yb_tserver_ui_port`
 
-* YB Tserver UI
+* YB Tserver UI Port
 * Default value: `9000`
 * Optional
 
@@ -73,6 +73,14 @@ Github action to setup a YugabyteDB database
 For more information about different combinations and their effects of authentication related inputs,
 please take a look at https://docs.yugabyte.com/latest/reference/configuration/yugabyted/#environment-variables
 
+## Outputs
+
+* `container_id` - Docker container ID
+* `yb_master_ui_port` - YB Master UI port
+* `yb_tserver_ui_port` - YB Tserver UI port
+* `ysql_port` - YSQL API Port
+* `ycql_port` - YCQL API Port
+
 ## Example usage
 
 1. Default
@@ -80,6 +88,23 @@ please take a look at https://docs.yugabyte.com/latest/reference/configuration/y
 ```yaml
 - name: Setup YugabyteDB cluster
   uses: yugabyte/yugabyte-db-action@master
+  id: server
+
+# Sample usage:
+- name: Test YSQL API
+  run: |
+    docker run --network host --rm yugabytedb/yugabyte-client:latest ysqlsh -h localhost -p "${{ steps.server.outputs.ysql_port }}" \
+      -c "CREATE TABLE foo(id int primary key); INSERT INTO foo SELECT * FROM generate_series(1,10);"
+- name: Test YCQL API
+  run: |
+    docker run --network host --rm yugabytedb/yugabyte-client:latest ycqlsh localhost "${{ steps.server.outputs.ycql_port }}" \
+      --execute 'create keyspace foo; create table foo.bar(id int primary key); insert into foo.bar (id) values (1);'
+
+- name: Test YB Master UI
+  run: curl --head "http://localhost:${{ steps.server.outputs.yb_master_ui_port }}"
+
+- name: Test YB Tserver UI
+  run: curl --head "http://localhost:${{ steps.server.outputs.yb_tserver_ui_port }}"
 ```
 
 2. Customized
@@ -93,6 +118,10 @@ please take a look at https://docs.yugabyte.com/latest/reference/configuration/y
     yb_tserver_ui_port: 9000
     ysql_port: 5433
     ycql_port: 9042
+
+# Sample usage:
+- name: Test YB Tserver UI
+  run: curl --head "http://localhost:9000"
 ```
 
 3. Custom Credentials
