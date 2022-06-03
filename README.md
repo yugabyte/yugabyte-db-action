@@ -83,7 +83,7 @@ please take a look at https://docs.yugabyte.com/latest/reference/configuration/y
 
 ## Example usage
 
-1. Default
+1. Default with no custom credentials:
 
 ```yaml
 - name: Setup YugabyteDB cluster
@@ -107,7 +107,7 @@ please take a look at https://docs.yugabyte.com/latest/reference/configuration/y
   run: curl --head "http://localhost:${{ steps.server.outputs.yb_tserver_ui_port }}"
 ```
 
-2. Customized
+2. Customized connection settings:
 
 ```yaml
 - name: Setup YugabyteDB cluster
@@ -137,4 +137,13 @@ please take a look at https://docs.yugabyte.com/latest/reference/configuration/y
     ycql_user: testcqluser
     ycql_password: testcqlpass
     ycql_keyspace: testks
+- name: Test YSQL API
+  run: |
+    docker run --network host -e PGPASSWORD=testsqlpass --rm yugabytedb/yugabyte-client:latest ysqlsh -h localhost -U testsqluser -d testdb -p "${{ steps.server.outputs.ysql_port }}" \
+      -c "CREATE TABLE foo(id int primary key); INSERT INTO foo SELECT * FROM generate_series(1,10);"
+
+- name: Test YCQL API
+  run: |
+    docker run --network host --rm yugabytedb/yugabyte-client:latest ycqlsh localhost -u testcqluser -p testcqlpass "${{ steps.server.outputs.ycql_port }}" \
+      --execute 'create keyspace foo; create table foo.bar(id int primary key); insert into foo.bar (id) values (1);'
 ```
