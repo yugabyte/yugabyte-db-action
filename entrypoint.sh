@@ -23,12 +23,14 @@ SERVICE_ID=$(docker run \
   -p "${INPUT_YCQL_PORT}:${INPUT_YCQL_PORT}" \
   --detach "${ENV_VARS[@]}" \
   yugabytedb/yugabyte:"${INPUT_YB_IMAGE_TAG}" \
-  bin/yugabyted start --ycql_port="${INPUT_YCQL_PORT}" --ysql_port="${INPUT_YSQL_PORT}" \
+  bin/yugabyted start  \
+  --ycql_port="${INPUT_YCQL_PORT}" --ysql_port="${INPUT_YSQL_PORT}" \
   --master_webserver_port="${INPUT_YB_MASTER_UI_PORT}" --tserver_webserver_port="${INPUT_YB_TSERVER_UI_PORT}" \
   --daemon=false --ui=false)
 
 function waitUntilHealthy() {
-  while ! docker exec "$1" ysqlsh -U "${INPUT_YSQL_USER}" -p "$2" -c \\conninfo; do
+  while ! docker exec "$1" bash -c "ysqlsh -U ${INPUT_YSQL_USER} -p $2"' -h $(hostname) -c \\conninfo'; 
+  do
     sleep 5s
   done
 }
